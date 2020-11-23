@@ -44,8 +44,7 @@ export const getPost = () => {
             console.log(json)
 
             json.forEach((el) => {
-                let $clone = d.importNode($template, true),
-                    categories = ``,
+                let categories = ``,
                     tags = ``
 
                 el._embedded["wp:term"][0].forEach((li) => categories += `<li>${li.name}</li>`)
@@ -70,6 +69,8 @@ export const getPost = () => {
                     <ul>${tags}</ul>
                 `
                 $template.querySelector(".post-content > article").innerHTML = el.content.rendered
+                
+                let $clone = d.importNode($template, true)
                 $fragment.appendChild($clone)
             })
 
