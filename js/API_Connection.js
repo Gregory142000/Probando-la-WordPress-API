@@ -1,4 +1,5 @@
 const d = document,
+    w = window,
     $site = d.getElementById("site"),
     $posts = d.getElementById("posts"),
     $loader = d.querySelector(".loader"),
@@ -11,12 +12,13 @@ const d = document,
     PAGES = `${API_WP}/pages`,
     CATEGORIES = `${API_WP}/categories`;
 
+let page = 1,
+    perPage = 5
+
 export const getSiteData = () => {
     fetch(SITE)
         .then(res => res.ok ? res.json() : Promise.reject(res))
         .then(json => {
-            console.log(json)
-
             $site.innerHTML = `
                 <h3>Sitio Web</h3>
                 <h2>
@@ -38,11 +40,9 @@ export const getSiteData = () => {
 export const getPost = () => {
     $loader.style.display = "block"
 
-    fetch(POSTS)
+    fetch(`${POSTS}&page=${page}&per_page=${perPage}`)
         .then(res => res.ok ? res.json() : Promise.reject(res))
         .then(json => {
-            console.log(json)
-
             json.forEach((el) => {
                 let categories = ``,
                     tags = ``
@@ -50,7 +50,7 @@ export const getPost = () => {
                 el._embedded["wp:term"][0].forEach((li) => categories += `<li>${li.name}</li>`)
                 el._embedded["wp:term"][1].forEach((li) => tags += `<li>${li.name}</li>`)
 
-                $template.querySelector(".post-image").src = el._embedded["wp:featuredmedia"][0].source_url
+                $template.querySelector(".post-image").src = el._embedded["wp:featuredmedia"] ? el._embedded["wp:featuredmedia"][0].source_url : ""
                 $template.querySelector(".post-image").alt = el.title.rendered
                 $template.querySelector(".post-title").innerHTML = el.title.rendered
                 $template.querySelector(".post-author").innerHTML = `
@@ -69,7 +69,7 @@ export const getPost = () => {
                     <ul>${tags}</ul>
                 `
                 $template.querySelector(".post-content > article").innerHTML = el.content.rendered
-                
+
                 let $clone = d.importNode($template, true)
                 $fragment.appendChild($clone)
             })
@@ -85,4 +85,15 @@ export const getPost = () => {
             $site.innerHTML = `<p>Error ${error.status}: ${message}</p>`
             $loader.style.display = "none"
         })
+}
+
+export const getMorePost = () => {
+    w.addEventListener("scroll", () => {
+        const {scrollTop, clientHeight, scrollHeight} = d.documentElement
+
+        if(scrollTop + clientHeight >= scrollHeight - 1){
+            page++
+            getPost()
+        }
+    })
 }
